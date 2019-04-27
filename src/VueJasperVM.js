@@ -7,12 +7,21 @@ const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
 const reportsRepository = RepositoryFactory.get('reports')
 const folderUri = '/DimPorts'
-
 export default {
     name: 'vue-jasper',
     components: {},
     props: {
-        baseURL: {
+        url: {
+            type: String,
+            required: false,
+            default: undefined
+        },
+        username: {
+            type: String,
+            required: false,
+            default: undefined
+        },
+        password: {
             type: String,
             required: false,
             default: undefined
@@ -51,8 +60,16 @@ export default {
         }
     },
     created() {
-        if (this.baseURL) {
-            jasper.defaults.baseURL = this.baseURL
+        if (this.url) {
+            console.log('setting URL')
+            jasper.defaults.baseURL = this.url
+        }
+        if (this.username && this.password) {
+            console.log('setting username and password')
+            jasper.defaults.auth = {
+                username: this.username,
+                password: this.password
+            }
         }
         this.init()
         this.getReports()
@@ -187,5 +204,5 @@ export default {
                 }
             }
         }
-    },
+    }
 }

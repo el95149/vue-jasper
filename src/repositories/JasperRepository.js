@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseURL = 'http://localhost:8081/jasperserver/rest_v2/'
+const baseURL = 'http://localhost:8080/jasperserver/rest_v2/'
 const user = 'user'
 const password = 'bitnami'
 let config = {
