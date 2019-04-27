@@ -151,17 +151,9 @@ export default {
             return this.criteria.inputControls
                 ? Object.values(this.criteria.inputControls).map(
                     inputControl => {
-                        let value = inputControl.state.value
-                        // TODO replace ugly 'hack' with generic solution
-                        if (
-                            inputControl.state.value instanceof Date &&
-                            inputControl.id.toLowerCase().includes('year')
-                        ) {
-                            value = value.getFullYear()
-                        }
                         return {
                             name: inputControl.id,
-                            value: value
+                            value: inputControl.state.value
                         }
                     }
                 )

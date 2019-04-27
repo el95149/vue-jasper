@@ -2,9 +2,7 @@ import {DatePicker, InputNumber, Input} from 'element-ui'
 
 const InputControlTypes = {
     singleValueNumber: function(inputControl) {
-        return inputControl.id.toLowerCase().includes('year')
-            ? DatePicker
-            : InputNumber
+        return InputNumber
     },
     singleValueText: function() {
         return Input
