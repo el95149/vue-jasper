@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "vue-jasper",
-  "version": "1.0.0-alpha",
+  "version": "1.0.1-alpha",
   "description": "A Vue component to consume Jasper server reports",
   "main": "./dist/vue-jasper.js",
   "scripts": {
