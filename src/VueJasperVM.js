@@ -113,6 +113,8 @@ export default {
                         )
                     }
                 }
+                // For some reason I can't fathom, Vue.set doesn't work, making added properties non-reactive.
+                // Total cost: 5-6 hours....
                 _self.$set(
                     _self.criteria.inputControls,
                     inputControl.id,
