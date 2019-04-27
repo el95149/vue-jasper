@@ -146,6 +146,10 @@ export default {
                     document.body.removeChild(link)
                     this.loading = false
                 })
+                .catch(error => {
+                    this.loading = false
+                    throw error
+                })
         },
         buildReportParams: function () {
             return this.criteria.inputControls
