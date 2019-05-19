@@ -1,6 +1,7 @@
 const commonRules = function(inputControl) {
     return {
-        trigger: 'blur',
+        fullField: ' ', // ugly hack to remove field name from displayed error
+        trigger: 'change',
         required: inputControl.mandatory
     }
 }
@@ -13,6 +14,12 @@ const InputControlRules = {
         }
     },
     singleValueText: function(inputControl) {
+        return {
+            ...commonRules(inputControl),
+            type: 'string'
+        }
+    },
+    singleSelect: function (inputControl) {
         return {
             ...commonRules(inputControl),
             type: 'string'

@@ -2,11 +2,13 @@ import Vue from 'vue'
 import {RepositoryFactory} from './repositories/RepositoryFactory'
 import InputControlRules from './InputControlRules'
 import InputControlTypes from './InputControlTypes'
+import InputControlProps from './InputControlProps'
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
 const reportsRepository = RepositoryFactory.get('reports')
 const folderUri = '/DimPorts'
+
 export default {
     name: 'vue-jasper',
     components: {},
@@ -106,12 +108,10 @@ export default {
             }
             let _self = this
             inputControls.forEach(inputControl => {
-                let rule = {
-                    state: {
-                        value: InputControlRules[inputControl.type](
-                            inputControl
-                        )
-                    }
+                // create reactive properties for input controls
+                // ensure input control bears a target reactive value property
+                if (!inputControl.state.value) {
+                    inputControl.state.value = null
                 }
                 // For some reason I can't fathom, Vue.set doesn't work, making added properties non-reactive.
                 // Total cost: 5-6 hours....
@@ -120,9 +120,16 @@ export default {
                     inputControl.id,
                     inputControl
                 )
+                // build validation rules
+                let rule = {
+                    state: {
+                        value: InputControlRules[inputControl.type](
+                            inputControl
+                        )
+                    }
+                }
                 Vue.set(_self.rules.inputControls, `${inputControl.id}`, rule)
             })
-            console.log(this.rules.inputControls)
         },
         clearReport() {
             this.init()
@@ -132,11 +139,7 @@ export default {
             return InputControlTypes[inputControl.type](inputControl)
         },
         getControlProps(inputControl) {
-            let props = {}
-            if (inputControl.id.toLowerCase().includes('year')) {
-                props.type = 'year'
-            }
-            return props
+            return InputControlProps[inputControl.type](inputControl)
         },
         getPropName(inputControl) {
             return `inputControls.${inputControl.id}.state.value`
