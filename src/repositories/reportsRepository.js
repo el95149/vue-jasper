@@ -16,7 +16,7 @@ export default {
             `${resource}${reportUri}.${type}?${paramsString}`,
             {
                 headers: {},
-                responseType: 'blob'
+                responseType: type == 'html' ? 'text/html' : 'blob'
             }
         )
     }

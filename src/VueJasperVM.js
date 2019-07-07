@@ -58,7 +58,8 @@ export default {
                     trigger: 'blur'
                 },
                 inputControls: {}
-            }
+            },
+            html: null
         }
     },
     created() {
@@ -79,6 +80,9 @@ export default {
     computed: {
         isGenerateReportEnabled() {
             return this.report != null
+        },
+        isPreview() {
+            return this.html != null
         }
     },
     methods: {
@@ -86,6 +90,7 @@ export default {
             this.reports = []
             this.criteria.report = null
             this.criteria.inputControls = {}
+            this.html = null
         },
         async getReports() {
             let { data } = await resourcesRepository.geByTypeAndFolderUri(
@@ -95,6 +100,7 @@ export default {
             this.reports = data.resourceLookup
         },
         async getReportControls() {
+            this.criteria.inputControls = {}
             let inputControls = []
             if (this.criteria.report) {
                 this.loading = true
@@ -173,6 +179,29 @@ export default {
                     throw error
                 })
         },
+        async previewReport() {
+            try {
+                await this.$refs['reportsForm'].validate()
+            } catch (e) {
+                return
+            }
+            let params = this.buildReportParams()
+            this.loading = true
+            reportsRepository
+                .generateReport(this.criteria.report.uri, 'html', params)
+                .then(response => {
+                    console.log(response.data)
+                    this.html = response.data
+                    this.loading = false
+                })
+                .catch(error => {
+                    this.loading = false
+                    throw error
+                })
+        },
+        clearPreview() {
+            this.html = null
+        },
         buildReportParams: function () {
             return this.criteria.inputControls
                 ? Object.values(this.criteria.inputControls).map(
@@ -193,6 +222,7 @@ export default {
                     report: {
                         self: 'Report',
                         placeholder: 'Choose one of the available reports',
+                        preview: 'Preview',
                         generate: 'Generate',
                         clear: 'Clear'
                     }
@@ -203,6 +233,7 @@ export default {
                     report: {
                         self: 'Αναφορά',
                         placeholder: 'Επιλεξτε μία από τις διαθέσιμες αναφορές',
+                        preview: 'Προεπισκόπηση',
                         generate: 'Παραγωγή',
                         clear: 'Καθαρισμός'
                     }
