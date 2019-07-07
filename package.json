@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/el95149/vue-jasper#readme",
   "dependencies": {
-    "axios": "0.18.0"
+    "axios": "0.18.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
