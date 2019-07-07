@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "vue-jasper",
-  "version": "1.0.5-alpha",
+  "version": "1.0.6-alpha",
   "description": "A Vue component, based on Element UI, to consume Jasper server reports",
   "main": "./dist/vue-jasper.js",
   "scripts": {
@@ -26,8 +26,7 @@
   },
   "homepage": "https://github.com/el95149/vue-jasper#readme",
   "dependencies": {
-    "axios": "0.18.0",
-    "font-awesome": "4.7.0"
+    "axios": "0.18.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

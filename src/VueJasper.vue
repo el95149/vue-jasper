@@ -5,7 +5,7 @@
                 <el-select v-model="criteria.report" value-key="uri"
                            :placeholder="$t('jasper.report.placeholder')" :clearable="true"
                            @change="getReportControls" @clear="clearReport">
-                    <i slot="prefix" class="el-input__icon fa fa-bar-chart"></i>
+                    <i slot="prefix" class="el-input__icon el-icon-data-analysis"></i>
                     <el-option
                             v-for="report in reports"
                             :key="report.uri"
@@ -27,11 +27,11 @@
                 </el-form-item>
             </template>
             <el-form-item>
-                <el-button type="primary" icon="fa fa-search" @click="previewReport">
+                <el-button type="primary" icon="el-icon-search" @click="previewReport">
                     {{$t('jasper.report.preview')}}
                 </el-button>
                 <el-dropdown @command="generateReport" style="margin-right: 10px">
-                    <el-button type="success" icon="fa fa-download">
+                    <el-button type="success" icon="el-icon-download">
                         {{$t('jasper.report.generate')}}<i class="el-icon-arrow-down el-icon--right"></i>
                     </el-button>
                     <el-dropdown-menu slot="dropdown">
@@ -40,7 +40,7 @@
                         </el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
-                <el-button type="info" icon="fa fa-undo" @click="clearReport">
+                <el-button type="info" icon="el-icon-delete" @click="clearReport">
                     {{$t('jasper.report.clear')}}
                 </el-button>
             </el-form-item>
