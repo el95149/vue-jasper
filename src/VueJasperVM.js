@@ -28,6 +28,11 @@ export default {
             required: false,
             default: undefined
         },
+        token: {
+            type: String,
+            required: false,
+            default: undefined
+        },
         types: {
             type: Array,
             required: false,
@@ -67,7 +72,13 @@ export default {
             console.log('setting URL')
             jasper.defaults.baseURL = this.url
         }
-        if (this.username && this.password) {
+        if (this.token) {
+            console.log('setting token')
+            delete jasper.defaults.auth
+            let headers = jasper.defaults.headers
+            headers['Authorization'] = 'Bearer ' + this.token
+            jasper.defaults.headers = headers
+        } else if (this.username && this.password) {
             console.log('setting username and password')
             jasper.defaults.auth = {
                 username: this.username,

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [1.0.8-alpha] - 2019-09-16
+### Added
+- Bearer token auth support
+
+### Changed
+- Updated axios version
+
 ## [1.0.4-alpha] - 2019-05-19
 ### Added
 - Select based input control
