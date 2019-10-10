@@ -1,16 +1,18 @@
-import {DatePicker, InputNumber, Input} from 'element-ui'
+import {DatePicker, InputNumber, Input, Checkbox} from 'element-ui'
 import SelectJasper from './SelectJasper.vue'
 
 const InputControlTypes = {
-    singleValueNumber: function(inputControl) {
+    singleValueNumber(inputControl) {
         return InputNumber
     },
-    singleValueText: function() {
+    singleValueText() {
         return Input
     },
-    singleSelect: function(){
+    singleSelect() {
         return SelectJasper
+    },
+    bool() {
+        return Checkbox
     }
 }
-
 export default InputControlTypes

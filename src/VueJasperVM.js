@@ -130,6 +130,10 @@ export default {
                 if (!inputControl.state.value) {
                     inputControl.state.value = null
                 }
+                // TODO OCP this
+                if (inputControl.type === 'bool') {
+                    inputControl.state.value = (inputControl.state.value === 'true')
+                }
                 // For some reason I can't fathom, Vue.set doesn't work, making added properties non-reactive.
                 // Total cost: 5-6 hours....
                 _self.$set(

@@ -1,30 +1,34 @@
-const commonRules = function(inputControl) {
+const commonRules = function (inputControl) {
     return {
         fullField: ' ', // ugly hack to remove field name from displayed error
         trigger: 'change',
         required: inputControl.mandatory
     }
 }
-
 const InputControlRules = {
-    singleValueNumber: function(inputControl) {
+    singleValueNumber(inputControl) {
         return {
             ...commonRules(inputControl),
             type: 'integer'
         }
     },
-    singleValueText: function(inputControl) {
+    singleValueText(inputControl) {
         return {
             ...commonRules(inputControl),
             type: 'string'
         }
     },
-    singleSelect: function (inputControl) {
+    singleSelect(inputControl) {
         return {
             ...commonRules(inputControl),
             type: 'string'
         }
+    },
+    bool(inputControl) {
+        return {
+            ...commonRules(inputControl),
+            type: 'boolean'
+        }
     }
 }
-
 export default InputControlRules

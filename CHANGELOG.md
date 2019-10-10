@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [1.0.8-alpha2] - 2019-10-10
+### Added
+- Boolean/checkbox input control
+
 ## [1.0.8-alpha] - 2019-09-16
 ### Added
 - Bearer token auth support

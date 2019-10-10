@@ -1,15 +1,17 @@
 const InputControlProps = {
-    singleValueNumber: function(inputControl) {
+    singleValueNumber(inputControl) {
         return {}
     },
-    singleValueText: function() {
+    singleValueText() {
         return {}
     },
-    singleSelect: function(inputControl){
+    singleSelect(inputControl) {
         return {
             options: inputControl.state.options
         }
+    },
+    bool() {
+        return {}
     }
 }
-
 export default InputControlProps
