@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [1.0.8-alpha3] - 2019-10-13
+### Added
+- Input control refresh (e.g. slave controls) on control value change
+
 ## [1.0.8-alpha2] - 2019-10-10
 ### Added
 - Boolean/checkbox input control

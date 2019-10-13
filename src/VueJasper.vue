@@ -23,7 +23,7 @@
                               :key="inputControl.uri" :prop="getPropName(inputControl)">
                     <component :name="inputControl.id" :key="inputControl.id" :is="getControlType(inputControl)"
                                v-bind="getControlProps(inputControl)"
-                               v-model="inputControl.state.value"/>
+                               v-model="inputControl.state.value" @change="inputControlValueChanged"/>
                 </el-form-item>
             </template>
             <el-form-item>

@@ -1,5 +1,5 @@
 <template>
-    <el-select v-model="inputVal" placeholder="Select" :clearable="true">
+    <el-select ref="select" v-model="inputVal" placeholder="Select" :clearable="true" @change="changeVal">
         <el-option
                 v-for="item in options"
                 :key="item.value"
@@ -23,7 +23,7 @@
             },
             value: [Number, String]
         },
-        data(){
+        data() {
             return {
                 inputVal: this.value
             }
@@ -31,6 +31,11 @@
         watch: {
             inputVal(val) {
                 this.$emit('input', val)
+            }
+        },
+        methods: {
+            changeVal(val) {
+                this.$emit('change', { name: this.$refs.select.$parent.$attrs.name, value: val })
             }
         }
     }
