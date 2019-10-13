@@ -12,7 +12,8 @@ let config = {
     withCredentials: true,
     headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-REMOTE-DOMAIN': '1'
     }
 }
 export default axios.create(config)

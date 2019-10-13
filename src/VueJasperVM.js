@@ -3,12 +3,12 @@ import {RepositoryFactory} from './repositories/RepositoryFactory'
 import InputControlRules from './InputControlRules'
 import InputControlTypes from './InputControlTypes'
 import InputControlProps from './InputControlProps'
+import InputControlProcessors from "./InputControlProcessors"
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
 const reportsRepository = RepositoryFactory.get('reports')
 const folderUri = '/DimPorts'
-
 export default {
     name: 'vue-jasper',
     components: {},
@@ -130,10 +130,8 @@ export default {
                 if (!inputControl.state.value) {
                     inputControl.state.value = null
                 }
-                // TODO OCP this
-                if (inputControl.type === 'bool') {
-                    inputControl.state.value = (inputControl.state.value === 'true')
-                }
+                // initialize input control values
+                inputControl.state = InputControlProcessors[inputControl.type](inputControl.state)
                 // For some reason I can't fathom, Vue.set doesn't work, making added properties non-reactive.
                 // Total cost: 5-6 hours....
                 _self.$set(
@@ -164,6 +162,27 @@ export default {
         },
         getPropName(inputControl) {
             return `inputControls.${inputControl.id}.state.value`
+        },
+        async inputControlValueChanged(event) {
+            let inputControlState = []
+            this.loading = true
+            let { data } = await reportsRepository.updateInputControlsValues(
+                this.criteria.report.uri,
+                this.criteria.inputControls,
+                event
+            )
+            if (data.inputControlState) {
+                inputControlState = data.inputControlState
+            }
+            this.loading = false
+            let _self = this
+            inputControlState.forEach(inputControlStateEntry => {
+                // get matching input control
+                let inputControl = _self.criteria.inputControls[inputControlStateEntry.id]
+                inputControl.state = Object.assign(inputControl.state, inputControlStateEntry)
+                // initialize input control values
+                inputControl.state = InputControlProcessors[inputControl.type](inputControl.state)
+            })
         },
         async generateReport(type) {
             try {
@@ -205,7 +224,6 @@ export default {
             reportsRepository
                 .generateReport(this.criteria.report.uri, 'html', params)
                 .then(response => {
-                    console.log(response.data)
                     this.html = response.data
                     this.loading = false
                 })

@@ -7,6 +7,27 @@ export default {
             `${resource}` + reportUri + '/inputControls'
         )
     },
+    updateInputControlValue(reportUri, inputControlValue) {
+        let body = {}
+        body[inputControlValue.name] = [`${inputControlValue.value}`]
+        return JasperRepository.post(
+            `${resource}` + reportUri + '/inputControls/values?freshData=true',
+            body
+        )
+    },
+    updateInputControlsValues(reportUri, inputControls, updatedValue) {
+        let body = {}
+        for(let inputControlId in inputControls){
+            let inputControl = inputControls[inputControlId]
+            body[inputControl.id] = [`${inputControl.state.value}`]
+        }
+        // override the changed value in the request
+        body[updatedValue.name] = [`${updatedValue.value}`]
+        return JasperRepository.post(
+            `${resource}` + reportUri + '/inputControls/values?freshData=true',
+            body
+        )
+    },
     generateReport(reportUri, type, params) {
         let paramsString = params.reduce(
             (str, param) => `${str}&${param.name}=${param.value}`,
