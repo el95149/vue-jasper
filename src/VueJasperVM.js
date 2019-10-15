@@ -4,11 +4,13 @@ import InputControlRules from './InputControlRules'
 import InputControlTypes from './InputControlTypes'
 import InputControlProps from './InputControlProps'
 import InputControlProcessors from "./InputControlProcessors"
+import csv from "csvtojson"
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
 const reportsRepository = RepositoryFactory.get('reports')
 const folderUri = '/DimPorts'
+const reader = new FileReader()
 export default {
     name: 'vue-jasper',
     components: {},
@@ -64,7 +66,8 @@ export default {
                 },
                 inputControls: {}
             },
-            html: null
+            html: null,
+            chartData: null
         }
     },
     created() {
@@ -94,6 +97,9 @@ export default {
         },
         isPreview() {
             return this.html != null
+        },
+        isChartEnabled() {
+            return this.chartData != null
         }
     },
     methods: {
@@ -102,6 +108,7 @@ export default {
             this.criteria.report = null
             this.criteria.inputControls = {}
             this.html = null
+            this.chartData = null
         },
         async getReports() {
             let { data } = await resourcesRepository.geByTypeAndFolderUri(
@@ -235,6 +242,42 @@ export default {
         clearPreview() {
             this.html = null
         },
+        clearChart(){
+            this.chartData = null
+        },
+        async getChartableData() {
+            try {
+                await this.$refs['reportsForm'].validate()
+            } catch (e) {
+                return
+            }
+            let _self = this
+            // This fires after the blob has been read/loaded.
+            reader.onload = function () {
+                const text = reader.result
+                csv()
+                    .preRawData(csvString => {
+                        // break the textblock into an array of lines and remove redundant header info
+                        var lines = csvString.split('\n')
+                        lines.splice(0, 2)
+                        return lines.join('\n')
+                    })
+                    .fromString(text)
+                    .then((data) => _self.chartData = data)
+            }
+            let params = this.buildReportParams()
+            this.loading = true
+            reportsRepository
+                .generateReport(this.criteria.report.uri, 'csv', params)
+                .then(response => {
+                    reader.readAsText(response.data)
+                    this.loading = false
+                })
+                .catch(error => {
+                    this.loading = false
+                    throw error
+                })
+        },
         buildReportParams: function () {
             return this.criteria.inputControls
                 ? Object.values(this.criteria.inputControls).map(
@@ -257,7 +300,10 @@ export default {
                         placeholder: 'Choose one of the available reports',
                         preview: 'Preview',
                         generate: 'Generate',
-                        clear: 'Clear'
+                        clear: 'Clear',
+                        chart: {
+                            prompt: 'Γράφημα'
+                        }
                     }
                 }
             },
@@ -268,7 +314,10 @@ export default {
                         placeholder: 'Επιλεξτε μία από τις διαθέσιμες αναφορές',
                         preview: 'Προεπισκόπηση',
                         generate: 'Παραγωγή',
-                        clear: 'Καθαρισμός'
+                        clear: 'Καθαρισμός',
+                        chart: {
+                            prompt: 'Chart'
+                        }
                     }
                 }
             }

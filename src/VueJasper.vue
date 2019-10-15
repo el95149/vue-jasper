@@ -40,6 +40,9 @@
                         </el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
+                <el-button type="secondary" icon="el-icon-data-analysis" @click="getChartableData">
+                    {{$t('jasper.report.chart.prompt')}}
+                </el-button>
                 <el-button type="info" icon="el-icon-delete" @click="clearReport">
                     {{$t('jasper.report.clear')}}
                 </el-button>
@@ -52,6 +55,9 @@
             <el-scrollbar :native="false">
                 <div v-html="html" style="min-height: 800px;height: 900px;max-height: 1000px;"></div>
             </el-scrollbar>
+        </el-dialog>
+        <el-dialog :title="$t('jasper.report.chart.title')" :visible="isChartEnabled" :modal="true" @close="clearChart">
+            // TODO
         </el-dialog>
     </div>
 </template>
