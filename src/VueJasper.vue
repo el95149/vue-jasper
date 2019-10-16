@@ -56,8 +56,9 @@
                 <div v-html="html" style="min-height: 800px;height: 900px;max-height: 1000px;"></div>
             </el-scrollbar>
         </el-dialog>
-        <el-dialog :title="$t('jasper.report.chart.title')" :visible="isChartEnabled" :modal="true" @close="clearChart">
-            // TODO
+        <el-dialog :title="$t('jasper.report.chart.title')" :visible="isChartEnabled" :modal="true" @close="clearChart"
+                   width="90%" top="50px">
+            <bar-chart v-if="isChartEnabled" :chart-data="chartDataCollection"></bar-chart>
         </el-dialog>
     </div>
 </template>

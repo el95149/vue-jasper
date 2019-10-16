@@ -4,7 +4,8 @@ import InputControlRules from './InputControlRules'
 import InputControlTypes from './InputControlTypes'
 import InputControlProps from './InputControlProps'
 import InputControlProcessors from "./InputControlProcessors"
-import csv from "csvtojson"
+import csv from 'csvtojson'
+import BarChart from './chart/BarChart.vue'
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
@@ -13,7 +14,9 @@ const folderUri = '/DimPorts'
 const reader = new FileReader()
 export default {
     name: 'vue-jasper',
-    components: {},
+    components: {
+        BarChart
+    },
     props: {
         url: {
             type: String,
@@ -67,7 +70,8 @@ export default {
                 inputControls: {}
             },
             html: null,
-            chartData: null
+            chartData: null,
+            chartDataCollection: null
         }
     },
     created() {
@@ -99,7 +103,7 @@ export default {
             return this.html != null
         },
         isChartEnabled() {
-            return this.chartData != null
+            return this.chartDataCollection != null
         }
     },
     methods: {
@@ -109,6 +113,7 @@ export default {
             this.criteria.inputControls = {}
             this.html = null
             this.chartData = null
+            this.chartDataCollection = null
         },
         async getReports() {
             let { data } = await resourcesRepository.geByTypeAndFolderUri(
@@ -242,8 +247,9 @@ export default {
         clearPreview() {
             this.html = null
         },
-        clearChart(){
+        clearChart() {
             this.chartData = null
+            this.chartDataCollection = null
         },
         async getChartableData() {
             try {
@@ -263,7 +269,24 @@ export default {
                         return lines.join('\n')
                     })
                     .fromString(text)
-                    .then((data) => _self.chartData = data)
+                    .then((data) => {
+                        _self.chartData = data
+                        let chartDataCollection = {
+                            labels: [],
+                            datasets: [{
+                                label: '//TODO',
+                                backgroundColor: [],
+                                data: []
+                            }]
+                        }
+                        _self.chartData.forEach(value => {
+                            // TODO dynamically select data
+                            chartDataCollection.labels.push(value['ΤΙΤΛΟΣ'])
+                            chartDataCollection.datasets[0].data.push(_self.toFloat(value['ΤΕΛΙΚΟ ΠΟΣΟ']))
+                            chartDataCollection.datasets[0].backgroundColor.push(_self.getRandomColorHex())
+                        })
+                        _self.chartDataCollection = chartDataCollection
+                    })
             }
             let params = this.buildReportParams()
             this.loading = true
@@ -277,6 +300,40 @@ export default {
                     this.loading = false
                     throw error
                 })
+        },
+        toFloat(num) {
+            let dotPos = num.indexOf('.')
+            let commaPos = num.indexOf(',')
+            if (dotPos < 0)
+                dotPos = 0
+            if (commaPos < 0)
+                commaPos = 0
+            let sep = null
+            if ((dotPos > commaPos) && dotPos)
+                sep = dotPos
+            else {
+                if ((commaPos > dotPos) && commaPos)
+                    sep = commaPos
+                else
+                    sep = false
+            }
+            if (sep == false)
+                return parseFloat(num.replace(/[^\d]/g, ""))
+            return parseFloat(
+                num.substr(0, sep).replace(/[^\d]/g, "") + '.' +
+                num.substr(sep + 1, num.length).replace(/[^0-9]/, "")
+            )
+        },
+        /**
+         * function to generate random color in hex form
+         */
+        getRandomColorHex() {
+            var hex = "0123456789ABCDEF",
+                color = "#"
+            for (var i = 1; i <= 6; i++) {
+                color += hex[Math.floor(Math.random() * 16)]
+            }
+            return color
         },
         buildReportParams: function () {
             return this.criteria.inputControls
@@ -302,7 +359,8 @@ export default {
                         generate: 'Generate',
                         clear: 'Clear',
                         chart: {
-                            prompt: 'Γράφημα'
+                            prompt: 'Γράφημα',
+                            title: 'Γράφημα Αναφοράς'
                         }
                     }
                 }
@@ -316,7 +374,8 @@ export default {
                         generate: 'Παραγωγή',
                         clear: 'Καθαρισμός',
                         chart: {
-                            prompt: 'Chart'
+                            prompt: 'Chart',
+                            title: 'Report Chart'
                         }
                     }
                 }

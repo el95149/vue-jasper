@@ -27,7 +27,9 @@
   "homepage": "https://github.com/el95149/vue-jasper#readme",
   "dependencies": {
     "axios": "^0.18.1",
-    "csvtojson": "^2.0.10"
+    "chart.js": "^2.8.0",
+    "csvtojson": "^2.0.10",
+    "vue-chartjs": "^3.4.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
