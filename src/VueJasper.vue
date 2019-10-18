@@ -56,9 +56,42 @@
                 <div v-html="html" style="min-height: 800px;height: 900px;max-height: 1000px;"></div>
             </el-scrollbar>
         </el-dialog>
+
         <el-dialog :title="$t('jasper.report.chart.title')" :visible="isChartEnabled" :modal="true" @close="clearChart"
                    width="90%" top="50px">
-            <bar-chart v-if="isChartEnabled" :chart-data="chartDataCollection"></bar-chart>
+
+            <el-form ref="chartForm" :rules="rules.chart" :model="chart" v-loading="loading" :inline="true">
+                <el-form-item :label="$t('jasper.report.chart.labelProperty')" prop="labelProperty">
+                    <el-select v-model="chart.labelProperty" value-key="labelProperty" :clearable="true">
+                        <i slot="prefix" class="el-input__icon el-icon-data-analysis"></i>
+                        <el-option
+                                v-for="labelProperty in chartProperties"
+                                :key="labelProperty"
+                                :label="labelProperty"
+                                :value="labelProperty">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item :label="$t('jasper.report.chart.dataProperty')" prop="dataProperty">
+                    <el-select v-model="chart.dataProperty" value-key="dataProperty" :clearable="true">
+                        <i slot="prefix" class="el-input__icon el-icon-data-analysis"></i>
+                        <el-option
+                                v-for="dataProperty in chartProperties"
+                                :key="dataProperty"
+                                :label="dataProperty"
+                                :value="dataProperty">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" icon="el-icon-view" @click="plotChart">
+                        {{$t('jasper.report.chart.plot')}}
+                    </el-button>
+                </el-form-item>
+            </el-form>
+
+            <bar-chart v-if="isChartRenderable" :chart-data="chart.renderableData"></bar-chart>
+
         </el-dialog>
     </div>
 </template>

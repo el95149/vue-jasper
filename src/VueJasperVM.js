@@ -67,11 +67,25 @@ export default {
                     required: true,
                     trigger: 'blur'
                 },
-                inputControls: {}
+                inputControls: {},
+                chart: {
+                    labelProperty: {
+                        required: true,
+                        trigger: 'blur'
+                    },
+                    dataProperty: {
+                        required: true,
+                        trigger: 'blur'
+                    }
+                }
             },
             html: null,
-            chartData: null,
-            chartDataCollection: null
+            chart: {
+                labelProperty: null,
+                dataProperty: null,
+                rawData: null,
+                renderableData: null
+            }
         }
     },
     created() {
@@ -103,7 +117,13 @@ export default {
             return this.html != null
         },
         isChartEnabled() {
-            return this.chartDataCollection != null
+            return this.chart.rawData != null
+        },
+        isChartRenderable() {
+            return this.chart.renderableData != null
+        },
+        chartProperties() {
+            return this.chart.rawData ? Object.keys(this.chart.rawData[0]) : []
         }
     },
     methods: {
@@ -112,8 +132,10 @@ export default {
             this.criteria.report = null
             this.criteria.inputControls = {}
             this.html = null
-            this.chartData = null
-            this.chartDataCollection = null
+            this.chart.labelProperty = null
+            this.chart.dataProperty = null
+            this.chart.rawData = null
+            this.chart.renderableData = null
         },
         async getReports() {
             let { data } = await resourcesRepository.geByTypeAndFolderUri(
@@ -248,8 +270,10 @@ export default {
             this.html = null
         },
         clearChart() {
-            this.chartData = null
-            this.chartDataCollection = null
+            this.chart.labelProperty = null
+            this.chart.dataProperty = null
+            this.chart.rawData = null
+            this.chart.renderableData = null
         },
         async getChartableData() {
             try {
@@ -265,27 +289,12 @@ export default {
                     .preRawData(csvString => {
                         // break the textblock into an array of lines and remove redundant header info
                         var lines = csvString.split('\n')
-                        lines.splice(0, 2)
+                        lines.splice(0, 2) // TODO parameterize this
                         return lines.join('\n')
                     })
                     .fromString(text)
                     .then((data) => {
-                        _self.chartData = data
-                        let chartDataCollection = {
-                            labels: [],
-                            datasets: [{
-                                label: '//TODO',
-                                backgroundColor: [],
-                                data: []
-                            }]
-                        }
-                        _self.chartData.forEach(value => {
-                            // TODO dynamically select data
-                            chartDataCollection.labels.push(value['ΤΙΤΛΟΣ'])
-                            chartDataCollection.datasets[0].data.push(_self.toFloat(value['ΤΕΛΙΚΟ ΠΟΣΟ']))
-                            chartDataCollection.datasets[0].backgroundColor.push(_self.getRandomColorHex())
-                        })
-                        _self.chartDataCollection = chartDataCollection
+                        _self.chart.rawData = data
                     })
             }
             let params = this.buildReportParams()
@@ -301,24 +310,54 @@ export default {
                     throw error
                 })
         },
+        async plotChart() {
+            try {
+                await this.$refs['chartForm'].validate()
+            } catch (e) {
+                return
+            }
+            let chartDataCollection = {
+                labels: [],
+                datasets: [{
+                    label: `${this.chart.labelProperty} - ${this.chart.dataProperty}`,
+                    backgroundColor: [],
+                    data: []
+                }]
+            }
+            try {
+                this.chart.rawData.forEach(value => {
+                    chartDataCollection.labels.push(value[this.chart.labelProperty])
+                    chartDataCollection.datasets[0].data.push(this.toFloat(value[this.chart.dataProperty]))
+                    chartDataCollection.datasets[0].backgroundColor.push(this.getRandomColorHex())
+                })
+            } catch (e) {
+                throw new Error('Unable to plot chart')
+            } finally {
+                this.chart.renderableData = chartDataCollection
+            }
+        },
         toFloat(num) {
             let dotPos = num.indexOf('.')
             let commaPos = num.indexOf(',')
-            if (dotPos < 0)
+            if (dotPos < 0) {
                 dotPos = 0
-            if (commaPos < 0)
-                commaPos = 0
-            let sep = null
-            if ((dotPos > commaPos) && dotPos)
-                sep = dotPos
-            else {
-                if ((commaPos > dotPos) && commaPos)
-                    sep = commaPos
-                else
-                    sep = false
             }
-            if (sep == false)
+            if (commaPos < 0) {
+                commaPos = 0
+            }
+            let sep = null
+            if ((dotPos > commaPos) && dotPos) {
+                sep = dotPos
+            } else {
+                if ((commaPos > dotPos) && commaPos) {
+                    sep = commaPos
+                } else {
+                    sep = false
+                }
+            }
+            if (sep == false) {
                 return parseFloat(num.replace(/[^\d]/g, ""))
+            }
             return parseFloat(
                 num.substr(0, sep).replace(/[^\d]/g, "") + '.' +
                 num.substr(sep + 1, num.length).replace(/[^0-9]/, "")
@@ -360,7 +399,10 @@ export default {
                         clear: 'Clear',
                         chart: {
                             prompt: 'Γράφημα',
-                            title: 'Γράφημα Αναφοράς'
+                            title: 'Γράφημα Αναφοράς',
+                            labelProperty: 'Πρώτος άξονας',
+                            dataProperty: 'Δεύτερος άξονας',
+                            plot: 'Προβολή'
                         }
                     }
                 }
@@ -375,7 +417,10 @@ export default {
                         clear: 'Καθαρισμός',
                         chart: {
                             prompt: 'Chart',
-                            title: 'Report Chart'
+                            title: 'Report Chart',
+                            labelProperty: 'First Axis',
+                            dataProperty: 'Second Axis',
+                            plot: 'Plot'
                         }
                     }
                 }
