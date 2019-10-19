@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "vue-jasper",
-  "version": "1.0.8-alpha3",
+  "version": "1.0.9",
   "description": "A Vue component, based on Element UI, to consume Jasper server reports",
   "main": "./dist/vue-jasper.js",
   "scripts": {
@@ -26,7 +26,10 @@
   },
   "homepage": "https://github.com/el95149/vue-jasper#readme",
   "dependencies": {
-    "axios": "^0.18.1"
+    "axios": "^0.18.1",
+    "chart.js": "^2.8.0",
+    "csvtojson": "^2.0.10",
+    "vue-chartjs": "^3.4.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
