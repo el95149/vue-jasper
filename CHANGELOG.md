@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [1.0.10] - 2019-10-19
+### Changed
+- Chart max number of rows now correctly calculated 
+
 ## [1.0.9] - 2019-10-19
 ### Added
 - Charts

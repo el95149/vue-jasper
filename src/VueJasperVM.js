@@ -328,7 +328,7 @@ export default {
                     })
                     .fromString(text)
                     .then((data) => {
-                        if (data.length <= _self.chartOptions.maxNumberOfRows) {
+                        if (data.length > _self.chartOptions.maxNumberOfRows) {
                             _self.chart.rawData = null
                             _self.$alert(_self.$t('jasper.report.chart.tooManyRows.content'),
                                 _self.$t('jasper.report.chart.tooManyRows.title'), {
