@@ -4,14 +4,21 @@ import InputControlRules from './InputControlRules'
 import InputControlTypes from './InputControlTypes'
 import InputControlProps from './InputControlProps'
 import InputControlProcessors from "./InputControlProcessors"
+import csv from 'csvtojson'
+import BarChart from './chart/BarChart.vue'
+import LineChart from './chart/LineChart.vue'
+import PieChart from './chart/PieChart.vue'
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
 const reportsRepository = RepositoryFactory.get('reports')
 const folderUri = '/DimPorts'
+const reader = new FileReader()
 export default {
     name: 'vue-jasper',
-    components: {},
+    components: {
+        BarChart, LineChart, PieChart
+    },
     props: {
         url: {
             type: String,
@@ -44,6 +51,17 @@ export default {
                     { label: 'DOCX', value: 'docx' }
                 ]
             }
+        },
+        chartOptions: {
+            type: Object,
+            required: false,
+            default() {
+                return {
+                    // sets the CSV number of rows to skip, when converting to JSON data
+                    skipHeaderRows: 2,
+                    maxNumberOfRows: 100
+                }
+            }
         }
     },
     data() {
@@ -62,9 +80,38 @@ export default {
                     required: true,
                     trigger: 'blur'
                 },
-                inputControls: {}
+                inputControls: {},
+                chart: {
+                    type: {
+                        required: true,
+                        trigger: 'blur'
+                    },
+                    labelProperty: {
+                        required: true,
+                        trigger: 'blur'
+                    },
+                    dataProperty: {
+                        required: true,
+                        trigger: 'blur'
+                    }
+                }
             },
-            html: null
+            html: null,
+            chart: {
+                options: {
+                    responsive: true
+                },
+                styles: {
+                    // position: 'relative',
+                    // height: '500px'
+                },
+                type: null,
+                labelProperty: null,
+                dataProperty: null,
+                rawData: null,
+                renderableType: null,
+                renderableData: null
+            }
         }
     },
     created() {
@@ -94,6 +141,20 @@ export default {
         },
         isPreview() {
             return this.html != null
+        },
+        isChartEnabled() {
+            return this.chart.rawData != null
+        },
+        isChartRenderable() {
+            return this.chart.renderableType != null && this.chart.renderableData != null
+        },
+        chartTypes() {
+            return Object.keys(this.$options.components)
+                .filter(value => value.toString().endsWith('Chart'))
+                .map(value => value.toString())
+        },
+        chartProperties() {
+            return this.chart.rawData ? Object.keys(this.chart.rawData[0]) : []
         }
     },
     methods: {
@@ -102,6 +163,12 @@ export default {
             this.criteria.report = null
             this.criteria.inputControls = {}
             this.html = null
+            this.chart.type = this.chartTypes[0]
+            this.chart.labelProperty = null
+            this.chart.dataProperty = null
+            this.chart.rawData = null
+            this.chart.renderableType = null
+            this.chart.renderableData = null
         },
         async getReports() {
             let { data } = await resourcesRepository.geByTypeAndFolderUri(
@@ -235,6 +302,122 @@ export default {
         clearPreview() {
             this.html = null
         },
+        clearChart() {
+            this.chart.labelProperty = null
+            this.chart.dataProperty = null
+            this.chart.rawData = null
+            this.chart.renderableType = null
+            this.chart.renderableData = null
+        },
+        async getChartableData() {
+            try {
+                await this.$refs['reportsForm'].validate()
+            } catch (e) {
+                return
+            }
+            let _self = this
+            // This fires after the blob has been read/loaded.
+            reader.onload = function () {
+                const text = reader.result
+                csv()
+                    .preRawData(csvString => {
+                        // break the textblock into an array of lines and remove redundant header info
+                        var lines = csvString.split('\n')
+                        lines.splice(0, _self.chartOptions.skipHeaderRows)
+                        return lines.join('\n')
+                    })
+                    .fromString(text)
+                    .then((data) => {
+                        if (data.length <= _self.chartOptions.maxNumberOfRows) {
+                            _self.chart.rawData = null
+                            _self.$alert(_self.$t('jasper.report.chart.tooManyRows.content'),
+                                _self.$t('jasper.report.chart.tooManyRows.title'), {
+                                    type: 'warning',
+                                    confirmButtonText: _self.$t('jasper.report.ok')
+                                })
+                        } else {
+                            _self.chart.rawData = data
+                        }
+                    })
+            }
+            let params = this.buildReportParams()
+            this.loading = true
+            reportsRepository
+                .generateReport(this.criteria.report.uri, 'csv', params)
+                .then(response => {
+                    reader.readAsText(response.data)
+                    this.loading = false
+                })
+                .catch(error => {
+                    this.loading = false
+                    throw error
+                })
+        },
+        async plotChart() {
+            try {
+                await this.$refs['chartForm'].validate()
+            } catch (e) {
+                return
+            }
+            let chartDataCollection = {
+                labels: [],
+                datasets: [{
+                    label: `${this.chart.labelProperty} - ${this.chart.dataProperty}`,
+                    backgroundColor: [],
+                    data: []
+                }]
+            }
+            try {
+                this.chart.rawData.forEach(value => {
+                    chartDataCollection.labels.push(value[this.chart.labelProperty])
+                    chartDataCollection.datasets[0].data.push(this.toFloat(value[this.chart.dataProperty]))
+                    chartDataCollection.datasets[0].backgroundColor.push(this.getRandomColorHex())
+                })
+            } catch (e) {
+                throw new Error('Unable to plot chart')
+            } finally {
+                this.chart.renderableType = this.chart.type
+                this.chart.renderableData = chartDataCollection
+            }
+        },
+        toFloat(num) {
+            let dotPos = num.indexOf('.')
+            let commaPos = num.indexOf(',')
+            if (dotPos < 0) {
+                dotPos = 0
+            }
+            if (commaPos < 0) {
+                commaPos = 0
+            }
+            let sep = null
+            if ((dotPos > commaPos) && dotPos) {
+                sep = dotPos
+            } else {
+                if ((commaPos > dotPos) && commaPos) {
+                    sep = commaPos
+                } else {
+                    sep = false
+                }
+            }
+            if (sep == false) {
+                return parseFloat(num.replace(/[^\d]/g, ""))
+            }
+            return parseFloat(
+                num.substr(0, sep).replace(/[^\d]/g, "") + '.' +
+                num.substr(sep + 1, num.length).replace(/[^0-9]/, "")
+            )
+        },
+        /**
+         * function to generate random color in hex form
+         */
+        getRandomColorHex() {
+            var hex = "0123456789ABCDEF",
+                color = "#"
+            for (var i = 1; i <= 6; i++) {
+                color += hex[Math.floor(Math.random() * 16)]
+            }
+            return color
+        },
         buildReportParams: function () {
             return this.criteria.inputControls
                 ? Object.values(this.criteria.inputControls).map(
@@ -257,7 +440,20 @@ export default {
                         placeholder: 'Choose one of the available reports',
                         preview: 'Preview',
                         generate: 'Generate',
-                        clear: 'Clear'
+                        clear: 'Clear',
+                        ok: 'OK',
+                        chart: {
+                            prompt: 'Chart',
+                            title: 'Report Chart',
+                            type: 'Type',
+                            labelProperty: 'Axis 1',
+                            dataProperty: 'Axis 2',
+                            plot: 'Plot',
+                            tooManyRows: {
+                                title: 'Too many data rows',
+                                content: 'The chart cannot be plotted, as you have selected filters that generate a very large number of data rows. Adjust your filters and try again.'
+                            }
+                        }
                     }
                 }
             },
@@ -268,7 +464,20 @@ export default {
                         placeholder: 'Επιλεξτε μία από τις διαθέσιμες αναφορές',
                         preview: 'Προεπισκόπηση',
                         generate: 'Παραγωγή',
-                        clear: 'Καθαρισμός'
+                        clear: 'Καθαρισμός',
+                        ok: 'Εντάξει',
+                        chart: {
+                            prompt: 'Γράφημα',
+                            title: 'Γράφημα Αναφοράς',
+                            type: 'Είδος',
+                            labelProperty: 'Άξονας 1',
+                            dataProperty: 'Άξονας 2',
+                            plot: 'Προβολή',
+                            tooManyRows: {
+                                title: 'Πολύ μεγάλος αριθμός δεδομένων',
+                                content: 'Το γράφημα δε μπορεί να προβληθεί, καθώς τα φίλτρα που έχετε επιλέξει δημιουργούν πολύ μεγάλο αριθμό δεδομένων. Προσαρμόστε τα φίλτρα σας και προσπαθήστε ξανά.'
+                            }
+                        }
                     }
                 }
             }
