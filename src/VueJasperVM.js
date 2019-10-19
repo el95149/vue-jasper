@@ -6,6 +6,8 @@ import InputControlProps from './InputControlProps'
 import InputControlProcessors from "./InputControlProcessors"
 import csv from 'csvtojson'
 import BarChart from './chart/BarChart.vue'
+import LineChart from './chart/LineChart.vue'
+import PieChart from './chart/PieChart.vue'
 
 const jasper = RepositoryFactory.get('jasper')
 const resourcesRepository = RepositoryFactory.get('resources')
@@ -15,7 +17,7 @@ const reader = new FileReader()
 export default {
     name: 'vue-jasper',
     components: {
-        BarChart
+        BarChart, LineChart, PieChart
     },
     props: {
         url: {
@@ -49,6 +51,17 @@ export default {
                     { label: 'DOCX', value: 'docx' }
                 ]
             }
+        },
+        chartOptions: {
+            type: Object,
+            required: false,
+            default() {
+                return {
+                    // sets the CSV number of rows to skip, when converting to JSON data
+                    skipHeaderRows: 2,
+                    maxNumberOfRows: 100
+                }
+            }
         }
     },
     data() {
@@ -69,6 +82,10 @@ export default {
                 },
                 inputControls: {},
                 chart: {
+                    type: {
+                        required: true,
+                        trigger: 'blur'
+                    },
                     labelProperty: {
                         required: true,
                         trigger: 'blur'
@@ -81,9 +98,18 @@ export default {
             },
             html: null,
             chart: {
+                options: {
+                    responsive: true
+                },
+                styles: {
+                    // position: 'relative',
+                    // height: '500px'
+                },
+                type: null,
                 labelProperty: null,
                 dataProperty: null,
                 rawData: null,
+                renderableType: null,
                 renderableData: null
             }
         }
@@ -120,7 +146,12 @@ export default {
             return this.chart.rawData != null
         },
         isChartRenderable() {
-            return this.chart.renderableData != null
+            return this.chart.renderableType != null && this.chart.renderableData != null
+        },
+        chartTypes() {
+            return Object.keys(this.$options.components)
+                .filter(value => value.toString().endsWith('Chart'))
+                .map(value => value.toString())
         },
         chartProperties() {
             return this.chart.rawData ? Object.keys(this.chart.rawData[0]) : []
@@ -132,9 +163,11 @@ export default {
             this.criteria.report = null
             this.criteria.inputControls = {}
             this.html = null
+            this.chart.type = this.chartTypes[0]
             this.chart.labelProperty = null
             this.chart.dataProperty = null
             this.chart.rawData = null
+            this.chart.renderableType = null
             this.chart.renderableData = null
         },
         async getReports() {
@@ -273,6 +306,7 @@ export default {
             this.chart.labelProperty = null
             this.chart.dataProperty = null
             this.chart.rawData = null
+            this.chart.renderableType = null
             this.chart.renderableData = null
         },
         async getChartableData() {
@@ -289,12 +323,21 @@ export default {
                     .preRawData(csvString => {
                         // break the textblock into an array of lines and remove redundant header info
                         var lines = csvString.split('\n')
-                        lines.splice(0, 2) // TODO parameterize this
+                        lines.splice(0, _self.chartOptions.skipHeaderRows)
                         return lines.join('\n')
                     })
                     .fromString(text)
                     .then((data) => {
-                        _self.chart.rawData = data
+                        if (data.length <= _self.chartOptions.maxNumberOfRows) {
+                            _self.chart.rawData = null
+                            _self.$alert(_self.$t('jasper.report.chart.tooManyRows.content'),
+                                _self.$t('jasper.report.chart.tooManyRows.title'), {
+                                    type: 'warning',
+                                    confirmButtonText: _self.$t('jasper.report.ok')
+                                })
+                        } else {
+                            _self.chart.rawData = data
+                        }
                     })
             }
             let params = this.buildReportParams()
@@ -333,6 +376,7 @@ export default {
             } catch (e) {
                 throw new Error('Unable to plot chart')
             } finally {
+                this.chart.renderableType = this.chart.type
                 this.chart.renderableData = chartDataCollection
             }
         },
@@ -397,12 +441,18 @@ export default {
                         preview: 'Preview',
                         generate: 'Generate',
                         clear: 'Clear',
+                        ok: 'OK',
                         chart: {
-                            prompt: 'Γράφημα',
-                            title: 'Γράφημα Αναφοράς',
-                            labelProperty: 'Πρώτος άξονας',
-                            dataProperty: 'Δεύτερος άξονας',
-                            plot: 'Προβολή'
+                            prompt: 'Chart',
+                            title: 'Report Chart',
+                            type: 'Type',
+                            labelProperty: 'Axis 1',
+                            dataProperty: 'Axis 2',
+                            plot: 'Plot',
+                            tooManyRows: {
+                                title: 'Too many data rows',
+                                content: 'The chart cannot be plotted, as you have selected filters that generate a very large number of data rows. Adjust your filters and try again.'
+                            }
                         }
                     }
                 }
@@ -415,12 +465,18 @@ export default {
                         preview: 'Προεπισκόπηση',
                         generate: 'Παραγωγή',
                         clear: 'Καθαρισμός',
+                        ok: 'Εντάξει',
                         chart: {
-                            prompt: 'Chart',
-                            title: 'Report Chart',
-                            labelProperty: 'First Axis',
-                            dataProperty: 'Second Axis',
-                            plot: 'Plot'
+                            prompt: 'Γράφημα',
+                            title: 'Γράφημα Αναφοράς',
+                            type: 'Είδος',
+                            labelProperty: 'Άξονας 1',
+                            dataProperty: 'Άξονας 2',
+                            plot: 'Προβολή',
+                            tooManyRows: {
+                                title: 'Πολύ μεγάλος αριθμός δεδομένων',
+                                content: 'Το γράφημα δε μπορεί να προβληθεί, καθώς τα φίλτρα που έχετε επιλέξει δημιουργούν πολύ μεγάλο αριθμό δεδομένων. Προσαρμόστε τα φίλτρα σας και προσπαθήστε ξανά.'
+                            }
                         }
                     }
                 }
