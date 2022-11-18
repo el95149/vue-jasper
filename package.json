@@ -41,7 +41,7 @@
     "bili": "^4.7.3",
     "element-ui": "^2.8.2",
     "rimraf": "^2.6.3",
-    "rollup-plugin-vue": "^5.0.0",
+    "rollup-plugin-vue": "^6.0.0",
     "uglifyjs-webpack-plugin": "^2.1.2",
     "vue": "^2.6.10",
     "vue-html-loader": "^1.2.4",
